@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Boda de Paul y Abigail</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Oswald:wght@600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        /* --- CARGA DE FUENTES LOCALES --- */
+        @font-face {
+            font-family: 'Generale Script';
+            src: url('./fonts/Generale Script Font.ttf') format('truetype'),
+                 url('./fonts/Generale Script Font.otf') format('opentype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Worksy';
+            src: url('./fonts/Worksy.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        :root {
+            --primary-color: #2c2c2c;
+            --olive-green: #6a7b58; 
+            --bronze-main: #b87333; 
+            --bronze-light: #d19b66;
+            --white-card: rgba(255, 255, 255, 0.85);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        /* --- BLOQUEO DE SCROLL INICIAL --- */
+        body.no-scroll {
+            overflow: hidden;
+        }
+
+        /* --- CONFIGURACIÓN DE FONDOS RESPONSIVOS --- */
+        body {
+            font-family: 'Montserrat', sans-serif;
+            color: var(--primary-color);
+            
+            background-image: url('./IMG/fondo-mobile.jpg');
+            background-color: #f7f5f0; 
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            
+            min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            overflow-x: hidden; position: relative;
+        }
+
+        @media (min-width: 768px) {
+            body {
+                background-image: url('./IMG/fondo-desktop.jpg');
+            }
+        }
+
+        body::before {
+            content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.04'/%3E%3C/svg%3E");
+            pointer-events: none; z-index: 1;
+        }
+
+        /* --- PANTALLA DE INTRODUCCIÓN (SPLASH SCREEN) --- */
+        .intro-screen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            z-index: 9999;
+            background-color: #f7f5f0;
+            background-image: url('./IMG/introvertical.jpg'); /* Imagen para celulares */
+            background-size: cover;
+            background-position: center;
+            cursor: pointer;
+            transition: opacity 1s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @media (min-width: 768px) {
+            .intro-screen {
+                background-image: url('./IMG/introhorizontal.jpg'); /* Imagen para PC */
+            }
+        }
+
+        .intro-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .wrapper {
+            width: 100%; max-width: 800px; padding: 60px 20px 40px;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+            z-index: 10; position: relative;
+        }
+
+        .header-section { 
+            margin-bottom: 35px; 
+            position: relative; 
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .watermark-date {
+            position: absolute;
+            top: -20px;
+            font-family: 'Worksy', sans-serif;
+            font-size: clamp(80px, 15vw, 130px);
+            color: rgba(106, 123, 88, 0.12); 
+            line-height: 1;
+            z-index: 0;
+            letter-spacing: 2px;
+            white-space: nowrap;
+        }
+
+        /* --- TÍTULO PRINCIPAL --- */
+        .main-title { 
+            font-family: 'Generale Script', cursive; 
+            font-weight: 300; 
+            -webkit-font-smoothing: antialiased; 
+            color: var(--olive-green); 
+            position: relative; 
+            z-index: 11; 
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            margin-top: 10px; 
+        }
+
+        .title-line-1 {
+            font-size: clamp(40px, 8vw, 65px);
+            line-height: 1;
+            z-index: 2; 
+        }
+
+        .title-line-2 {
+            font-size: clamp(65px, 13vw, 105px); 
+            line-height: 0.7; 
+            margin-top: -15px; 
+            z-index: 1;
+        }
+
+        .hero-section {
+            width: 100%; max-width: 750px; 
+            margin-bottom: 50px; position: relative; cursor: pointer;
+        }
+        .hero-img {
+            width: 100%; height: 380px; 
+            object-fit: cover; border-radius: 12px;
+            box-shadow: 0 15px 35px rgba(106, 123, 88, 0.15); transition: transform 0.3s ease;
+        }
+        .hero-section:hover .hero-img { transform: scale(1.02); }
+        
+        .timer-container {
+            background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(8px);
+            padding: 15px 20px; border-radius: 8px; display: flex; justify-content: center; gap: 15px;
+            position: absolute; bottom: -25px; left: 50%; transform: translateX(-50%);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.06); border: 1px solid rgba(184, 115, 51, 0.2);
+            width: 85%; max-width: 450px; 
+        }
+        .timer-unit { display: flex; flex-direction: column; align-items: center; min-width: 50px; }
+        .timer-val { font-family: 'Oswald', sans-serif; font-size: 24px; font-weight: 600; color: var(--olive-green); }
+        .timer-label { font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--bronze-main); font-weight: 600; }
+
+        .carousel-slider { width: 100vw; max-width: 100%; overflow: hidden; position: relative; margin: 30px 0 40px 0; padding: 10px 0; cursor: grab; }
+        .carousel-slider:active { cursor: grabbing; }
+        .carousel-track { display: flex; gap: 20px; width: max-content; will-change: transform; }
+        .wedding-card {
+            flex: 0 0 auto; width: 220px; height: 320px; border-radius: 12px; 
+            position: relative; overflow: hidden; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            border: 2px solid var(--white-card);
+            transition: transform 0.3s;
+        }
+        .wedding-card:hover { transform: scale(1.02); }
+        .wedding-card img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; pointer-events: none; }
+
+        .details-card {
+            width: 100%; max-width: 450px; padding: 40px 25px; margin-bottom: 40px;
+            position: relative; border-radius: 8px; background: var(--white-card);
+            border: 2px solid var(--bronze-main); 
+            box-shadow: 0 10px 30px rgba(106, 123, 88, 0.05);
+            overflow: hidden;
+            backdrop-filter: blur(5px);
+        }
+        .details-card h3 { font-family: 'Oswald', sans-serif; font-size: 16px; letter-spacing: 2px; margin-bottom: 8px; color: var(--olive-green); font-weight: 400; text-transform: uppercase; }
+        .details-card p { font-size: 15px; color: #555; line-height: 1.6; margin-bottom: 25px; font-weight: 300;}
+        .details-card p:last-child { margin-bottom: 0; }
+
+        .actions-panel { display: flex; flex-direction: column; gap: 14px; width: 100%; max-width: 320px; }
+        .action-btn {
+            background-color: var(--white-card); color: var(--olive-green); border: 1px solid var(--olive-green);
+            padding: 15px 20px; border-radius: 6px; font-size: 12px; font-weight: 600;
+            letter-spacing: 1.5px; text-transform: uppercase; cursor: pointer;
+            transition: all 0.3s ease; width: 100%; text-decoration: none; display: inline-block;
+            backdrop-filter: blur(5px);
+        }
+        .action-btn:hover { background-color: rgba(255,255,255,1); transform: translateY(-2px); box-shadow: 0 6px 15px rgba(106, 123, 88, 0.15); }
+        .btn-primary { background-color: var(--olive-green); color: white; border: none; }
+        .btn-primary:hover { background-color: var(--bronze-main); color: white; border: none;}
+
+        .modal-view {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px); 
+            display: flex; justify-content: center; align-items: center; z-index: 2000;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
+        }
+        .modal-view.show { opacity: 1; pointer-events: auto; }
+        .modal-inner {
+            background: #f7f5f0; padding: 35px 25px; border-radius: 12px;
+            width: 90%; max-width: 400px; text-align: center; position: relative;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); animation: scaleUp 0.3s ease;
+        }
+        @keyframes scaleUp { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+        
+        .modal-inner img.lightbox-img { width: 100%; height: auto; max-height: 75vh; object-fit: contain; border-radius: 8px; }
+
+        .close-x { position: absolute; top: 12px; right: 18px; font-size: 28px; cursor: pointer; border: none; background: none; color: var(--olive-green); z-index: 10; }
+
+        /* --- MAPA Y MARCADOR --- */
+        #map { width: 100%; height: 280px; border-radius: 8px; margin: 15px 0; border: 1px solid rgba(106, 123, 88, 0.2); }
+        
+        .custom-marker-container { width: 85px; height: 85px; position: relative; display: block; }
+        .custom-marker-photo {
+            width: 80px; height: 80px; border-radius: 50%; border: 3px solid var(--olive-green);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4); object-fit: cover; position: absolute; top: 0; left: 0; display: block;
+        }
+
+        /* --- ESTILOS DEL CONTENEDOR GOOGLE FORMS --- */
+        .form-modal-inner {
+            background: #fff; 
+            padding: 0; 
+            border-radius: 12px;
+            width: 90%; max-width: 450px; text-align: center; position: relative;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); animation: scaleUp 0.3s ease;
+            overflow: hidden; 
+        }
+
+        .custom-form-header {
+            width: 100%;
+            position: relative;
+            z-index: 5;
+            background: #fff;
+        }
+
+        .iframe-wrap {
+            width: 100%;
+            height: 480px; 
+            overflow: hidden;
+            position: relative;
+            background: #fff;
+        }
+
+        .iframe-wrap iframe {
+            position: absolute;
+            top: -245px; 
+            left: 0;
+            width: 100%;
+            height: calc(100% + 325px); 
+            border: none;
+        }
+
+        .close-form-x {
+            position: absolute; top: 10px; right: 15px; font-size: 28px; cursor: pointer; 
+            border: none; background: rgba(255,255,255,0.7); border-radius: 50%; width: 35px; height: 35px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--olive-green); z-index: 10;
+        }
+
+        /* --- ESTILOS EXCLUSIVOS MODAL AGRADECIMIENTO (ANIMACIÓN DESENFOQUE) --- */
+        .thanks-modal-inner {
+            background: transparent; 
+            padding: 0; 
+            border-radius: 12px;
+            width: 95%; max-width: 600px; 
+            text-align: center; position: relative;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4); animation: scaleUp 0.3s ease;
+            overflow: hidden; 
+        }
+        
+        .thanks-img-container {
+            position: relative;
+            width: 100%;
+            line-height: 0;
+        }
+
+        .thanks-img-container img {
+            width: 100%; height: auto; display: block; border-radius: 12px;
+            transition: all 1.2s ease-in-out; 
+        }
+
+        .thanks-img-container.blurred img {
+            filter: blur(6px) brightness(0.65); 
+            transform: scale(1.03); 
+        }
+
+        .thanks-text-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            padding: 35px 25px; 
+            opacity: 0; 
+            transition: opacity 1.2s ease-in-out;
+            pointer-events: none;
+        }
+
+        .thanks-img-container.blurred .thanks-text-overlay {
+            opacity: 1; 
+            pointer-events: auto;
+        }
+
+        .thanks-message {
+            color: #ffffff;
+            font-family: 'Montserrat', sans-serif;
+            font-size: clamp(12px, 3.5vw, 15px);
+            line-height: 1.6;
+            font-weight: 400;
+            text-shadow: 0px 2px 10px rgba(0,0,0,0.8); 
+        }
+
+        .thanks-message strong {
+            font-weight: 700;
+            font-size: 1.1em;
+            letter-spacing: 1px;
+        }
+
+        .close-thanks-x {
+            position: absolute; top: 12px; right: 12px; font-size: 24px; cursor: pointer; 
+            border: none; background: rgba(0,0,0,0.5); border-radius: 50%; width: 32px; height: 32px;
+            display: flex; align-items: center; justify-content: center;
+            color: white; z-index: 20; transition: background 0.3s;
+        }
+        .close-thanks-x:hover { background: rgba(0,0,0,0.8); }
+    </style>
+</head>
+<body class="no-scroll">
+
+    <audio id="bg-music" loop src="./Sounds/Alex Warren - Ordinary.mp3"></audio>
+
+    <div id="intro-screen" class="intro-screen"></div>
+
+    <div class="wrapper">
+        <div class="header-section">
+            <div class="watermark-date">11.07.2026</div>
+            <h1 class="main-title">
+                <span class="title-line-1">Bienvenido a</span>
+                <span class="title-line-2">Nuestra Boda</span>
+            </h1>
+        </div>
+
+        <div class="hero-section" onclick="openLightbox(this)">
+            <img src="./IMG/banner.jpg" alt="Paul y Abigail" class="hero-img">
+            <div class="timer-container">
+                <div class="timer-unit"><span class="timer-val" id="days">00</span><span class="timer-label">Días</span></div>
+                <div class="timer-unit"><span class="timer-val" id="hours">00</span><span class="timer-label">Horas</span></div>
+                <div class="timer-unit"><span class="timer-val" id="mins">00</span><span class="timer-label">Mins</span></div>
+                <div class="timer-unit"><span class="timer-val" id="secs">00</span><span class="timer-label">Segs</span></div>
+            </div>
+        </div>
+
+        <div class="carousel-slider" id="slider">
+            <div class="carousel-track" id="track">
+                <div class="wedding-card" onclick="openLightbox(this)"><img src="./IMG/carrusel-1.jpg" alt="Foto 1"></div>
+                <div class="wedding-card" onclick="openLightbox(this)"><img src="./IMG/carrusel-2.jpg" alt="Foto 2"></div>
+                <div class="wedding-card" onclick="openLightbox(this)"><img src="./IMG/carrusel-3.jpg" alt="Foto 3"></div>
+            </div>
+        </div>
+
+        <div class="details-card">
+            <h3>Fecha & Hora</h3>
+            <p>Sábado, 11 de Julio de 2026<br>14:00 Hrs</p>
+            <h3>Lugar</h3>
+            <p>Las Cabañas del Mar y Sol<br>Puerto Engabao</p>
+        </div>
+
+        <div class="actions-panel">
+            <button id="cta-mapa" class="action-btn">Ver Ubicación en Mapa</button>
+            <button id="cta-form" class="action-btn">Confirmar Asistencia</button>
+            
+            <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Boda+de+Paul+y+Abigail&dates=20260711T190000Z/20260712T020000Z&details=¡Falta+poco+para+la+boda+de+Paul+y+Abigail!+Recuerda+que+nuestro+gran+día+es+hoy.&location=Las+Cabañas+del+Mar+y+Sol,+Puerto+Engabao" target="_blank" class="action-btn btn-primary" style="margin-top: 5px;">Agendar Recordatorio</a>
+        </div>
+    </div>
+
+    <div id="view-lightbox" class="modal-view">
+        <div class="modal-inner" style="max-width: 500px; padding: 15px; background: transparent; box-shadow: none;">
+            <button class="close-x" style="color: white; right: 0; top: -30px;" onclick="hideModal('view-lightbox')">×</button>
+            <img id="lightbox-img" class="lightbox-img" src="" alt="Ampliada">
+        </div>
+    </div>
+
+    <div id="view-map-modal" class="modal-view">
+        <div class="modal-inner" style="max-width: 450px;">
+            <button class="close-x" onclick="hideModal('view-map-modal')">×</button>
+            <h3 style="font-family: 'Oswald', sans-serif; font-size: 16px; margin-bottom: 5px; color: var(--olive-green); text-transform: uppercase;">Ubicación del Evento</h3>
+            <p style="font-size: 12px; color: #666; font-weight: 300;">Las Cabañas del Mar y Sol, Puerto Engabao</p>
+            
+            <div id="map"></div>
+            <a href="https://maps.app.goo.gl/UqvZZ6afLticNKBC7" target="_blank" class="action-btn btn-primary">Cómo Llegar</a>
+        </div>
+    </div>
+
+    <div id="view-form" class="modal-view">
+        <div class="form-modal-inner">
+            <button class="close-form-x" onclick="hideModal('view-form')">×</button>
+            
+            <div class="custom-form-header">
+                <img src="./IMG/header-form.jpg" alt="Confirma tu Asistencia" style="width: 100%; height: auto; display: block; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+            </div>
+
+            <div class="iframe-wrap">
+                <iframe id="mi-iframe" src="https://docs.google.com/forms/d/e/1FAIpQLSc1UiZYa4mlKo9IIzFmrzFKpELDHRhj0eSqzf4LwuBhmop-0g/viewform?embedded=true" frameborder="0" marginheight="0" marginwidth="0" onload="iframeCargado()">Cargando…</iframe>
+            </div>
+        </div>
+    </div>
+
+    <div id="view-thanks" class="modal-view">
+        <div class="thanks-modal-inner">
+            <button class="close-thanks-x" onclick="cerrarAgradecimiento()">×</button>
+            
+            <div class="thanks-img-container" id="thanks-img-wrap">
+                <img src="./IMG/gracias.jpg" alt="¡Muchas Gracias!">
+                
+                <div class="thanks-text-overlay">
+                    <p class="thanks-message">
+                        Ante las adversidades siempre prevaleció nuestro amor.<br>
+                        Hoy comprendemos que fueron pruebas en nuestra vida<br>
+                        para fortalecer ese amor que se volvió sólido. Por éso nos<br>
+                        complace invitarte a que formes parte de esta ocasión<br>
+                        especial para nosotros <strong>NUESTRA BODA.</strong>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // --- INICIO: LÓGICA DE LA PANTALLA DE INTRODUCCIÓN Y AUDIO ---
+        document.getElementById('intro-screen').addEventListener('click', function() {
+            const music = document.getElementById('bg-music');
+            music.volume = 0.4; // Volumen al 40% (moderado)
+            
+            // Inicia la música
+            music.play().catch(error => {
+                console.log("El navegador bloqueó el audio:", error);
+            });
+
+            // Oculta la pantalla de introducción
+            this.classList.add('hidden');
+            
+            // Rehabilita el scroll de la página principal
+            document.body.classList.remove('no-scroll');
+
+            // Elimina el elemento del DOM después de la transición
+            setTimeout(() => {
+                this.style.display = 'none';
+            }, 1000);
+        });
+        // --- FIN INTRO ---
+
+        const targetDate = new Date("July 11, 2026 14:00:00").getTime();
+        
+        setInterval(() => {
+            const now = new Date().getTime();
+            const diff = targetDate - now;
+
+            if (diff > 0) {
+                document.getElementById('days').innerText = Math.floor(diff / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
+                document.getElementById('hours').innerText = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+                document.getElementById('mins').innerText = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+                document.getElementById('secs').innerText = Math.floor((diff % (1000 * 60)) / 1000).toString().padStart(2, '0');
+            } else {
+                document.getElementById('days').innerText = "00";
+                document.getElementById('hours').innerText = "00";
+                document.getElementById('mins').innerText = "00";
+                document.getElementById('secs').innerText = "00";
+            }
+        }, 1000);
+
+        const track = document.getElementById('track');
+        const slider = document.getElementById('slider');
+        const originalCards = Array.from(track.children);
+        
+        originalCards.forEach(card => {
+            track.appendChild(card.cloneNode(true));
+            track.insertBefore(card.cloneNode(true), track.firstChild);
+        });
+
+        let speed = 1;
+        let isDragging = false;
+        let startX, currentScrollLeft;
+        slider.scrollLeft = originalCards.length * 240;
+
+        function autoScroll() {
+            if (!isDragging) {
+                slider.scrollLeft += speed;
+                if (slider.scrollLeft >= track.scrollWidth - slider.clientWidth - 10 || slider.scrollLeft <= 10) {
+                    slider.scrollLeft = originalCards.length * 240;
+                }
+            }
+            requestAnimationFrame(autoScroll);
+        }
+        requestAnimationFrame(autoScroll);
+
+        slider.addEventListener('mousedown', (e) => { isDragging = true; startX = e.pageX - slider.offsetLeft; currentScrollLeft = slider.scrollLeft; });
+        slider.addEventListener('mouseleave', () => { isDragging = false; });
+        slider.addEventListener('mouseup', () => { isDragging = false; });
+        slider.addEventListener('mousemove', (e) => { if (!isDragging) return; const x = e.pageX - slider.offsetLeft; slider.scrollLeft = currentScrollLeft - (x - startX) * 1.5; });
+        slider.addEventListener('touchstart', (e) => { isDragging = true; startX = e.touches[0].pageX - slider.offsetLeft; currentScrollLeft = slider.scrollLeft; });
+        slider.addEventListener('touchend', () => { isDragging = false; });
+        slider.addEventListener('touchmove', (e) => { if (!isDragging) return; const x = e.touches[0].pageX - slider.offsetLeft; slider.scrollLeft = currentScrollLeft - (x - startX) * 1.5; });
+
+        function showModal(id) { document.getElementById(id).classList.add('show'); }
+        function hideModal(id) { document.getElementById(id).classList.remove('show'); }
+
+        function openLightbox(element) {
+            const imgSrc = element.querySelector('img').src;
+            document.getElementById('lightbox-img').src = imgSrc;
+            showModal('view-lightbox');
+        }
+
+        let mapInstance = null;
+        const lat = -2.628; 
+        const lng = -80.395;
+
+        document.getElementById('cta-mapa').addEventListener('click', function() {
+            showModal('view-map-modal');
+            
+            setTimeout(() => {
+                if (!mapInstance) {
+                    mapInstance = L.map('map').setView([lat, lng], 15);
+
+                    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                        attribution: '© OpenStreetMap © CARTO'
+                    }).addTo(mapInstance);
+
+                    const couplePhotoUrl = "./IMG/mapa.jpg"; 
+                    const customIcon = L.divIcon({
+                        className: 'custom-marker-node',
+                        html: `<div class="custom-marker-container"><img src="${couplePhotoUrl}" class="custom-marker-photo"></div>`,
+                        iconSize: [80, 80],
+                        iconAnchor: [40, 40] 
+                    });
+
+                    L.marker([lat, lng], { icon: customIcon }).addTo(mapInstance)
+                     .bindPopup("<b>¡Nuestra Boda!</b><br>Las Cabañas del Mar y Sol").openPopup();
+                } else {
+                    mapInstance.invalidateSize();
+                }
+            }, 300); 
+        });
+
+        document.getElementById('cta-form').addEventListener('click', function() {
+            showModal('view-form');
+        });
+
+        let cargasIframe = 0;
+        
+        function iframeCargado() {
+            cargasIframe++;
+            
+            if (cargasIframe === 2) {
+                setTimeout(() => {
+                    hideModal('view-form');
+                    showModal('view-thanks');
+                    
+                    cargasIframe = 0;
+                    document.getElementById('mi-iframe').src = "https://docs.google.com/forms/d/e/1FAIpQLSc1UiZYa4mlKo9IIzFmrzFKpELDHRhj0eSqzf4LwuBhmop-0g/viewform?embedded=true";
+                    
+                    setTimeout(() => {
+                        document.getElementById('thanks-img-wrap').classList.add('blurred');
+                    }, 2000);
+                    
+                }, 500); 
+            }
+        }
+
+        function cerrarAgradecimiento() {
+            hideModal('view-thanks');
+            
+            setTimeout(() => {
+                document.getElementById('thanks-img-wrap').classList.remove('blurred');
+            }, 400); 
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
