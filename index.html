@@ -75,21 +75,52 @@
             top: 0; left: 0;
             width: 100vw; height: 100vh;
             z-index: 9999;
+            cursor: pointer;
+            transition: opacity 1s ease-in-out;
+            overflow: hidden;
+        }
+
+        .intro-bg {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background-color: #f7f5f0;
             background-image: url('./IMG/introvertical.jpg'); /* Imagen para celulares */
             background-size: cover;
             background-position: center;
-            cursor: pointer;
-            transition: opacity 1s ease-in-out;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            transition: filter 1.2s ease-in-out, transform 1.2s ease-in-out;
+            z-index: 1;
         }
 
         @media (min-width: 768px) {
-            .intro-screen {
+            .intro-bg {
                 background-image: url('./IMG/introhorizontal.jpg'); /* Imagen para PC */
             }
+        }
+
+        .intro-bg.blurred {
+            filter: blur(6px) brightness(0.65); 
+            transform: scale(1.03); 
+        }
+
+        .intro-text-overlay {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 35px 25px;
+            opacity: 0;
+            transition: opacity 1.2s ease-in-out;
+            pointer-events: none;
+            z-index: 2;
+            text-align: center;
+        }
+
+        .intro-text-overlay.show {
+            opacity: 1;
         }
 
         .intro-screen.hidden {
@@ -140,18 +171,18 @@
         }
 
         .title-line-1 {
-            font-size: clamp(30px, 8vw, 65px); /* Ajuste el mínimo para móviles */
+            font-size: clamp(30px, 8vw, 65px);
             line-height: 1;
             z-index: 2; 
-            white-space: nowrap; /* Fuerza a mantenerse en una sola línea */
+            white-space: nowrap; 
         }
 
         .title-line-2 {
-            font-size: clamp(50px, 13vw, 105px); /* Ajuste el mínimo para móviles */
+            font-size: clamp(50px, 13vw, 105px); 
             line-height: 0.7; 
             margin-top: -15px; 
             z-index: 1;
-            white-space: nowrap; /* Fuerza a mantenerse en una sola línea */
+            white-space: nowrap; 
         }
 
         .hero-section {
@@ -160,7 +191,7 @@
         }
         .hero-img {
             width: 100%; 
-            height: auto; /* Permite escalar proporcinalmente sin cortar */
+            height: auto; 
             display: block;
             border-radius: 12px;
             box-shadow: 0 15px 35px rgba(106, 123, 88, 0.15); transition: transform 0.3s ease;
@@ -282,7 +313,7 @@
             color: var(--olive-green); z-index: 10;
         }
 
-        /* --- ESTILOS EXCLUSIVOS MODAL AGRADECIMIENTO (ANIMACIÓN DESENFOQUE) --- */
+        /* --- ESTILOS EXCLUSIVOS MODAL AGRADECIMIENTO --- */
         .thanks-modal-inner {
             background: transparent; 
             padding: 0; 
@@ -323,6 +354,7 @@
             pointer-events: auto;
         }
 
+        /* CLASE REUTILIZABLE PARA EL TEXTO DEL BLUR (Intro y Gracias) */
         .thanks-message {
             color: #ffffff;
             font-family: 'Montserrat', sans-serif;
@@ -351,7 +383,18 @@
 
     <audio id="bg-music" loop src="./Sounds/Alex Warren - Ordinary.mp3"></audio>
 
-    <div id="intro-screen" class="intro-screen"></div>
+    <div id="intro-screen" class="intro-screen">
+        <div id="intro-bg" class="intro-bg"></div>
+        <div id="intro-text-overlay" class="intro-text-overlay">
+            <p class="thanks-message">
+                Ante las adversidades siempre prevaleció nuestro amor.<br>
+                Hoy comprendemos que fueron pruebas en nuestra vida<br>
+                para fortalecer ese amor que se volvió sólido. Por éso nos<br>
+                complace invitarte a que formes parte de esta ocasión<br>
+                especial para nosotros <strong>NUESTRA BODA.</strong>
+            </p>
+        </div>
+    </div>
 
     <div class="wrapper">
         <div class="header-section">
@@ -452,6 +495,11 @@
     <script>
         // --- INICIO: LÓGICA DE LA PANTALLA DE INTRODUCCIÓN Y AUDIO ---
         document.getElementById('intro-screen').addEventListener('click', function() {
+            // Prevenir dobles clics
+            if(this.classList.contains('clicked')) return;
+            this.classList.add('clicked');
+            this.style.cursor = 'default';
+
             const music = document.getElementById('bg-music');
             music.volume = 0.4; // Volumen al 40% (moderado)
             
@@ -460,16 +508,22 @@
                 console.log("El navegador bloqueó el audio:", error);
             });
 
-            // Oculta la pantalla de introducción
-            this.classList.add('hidden');
-            
-            // Rehabilita el scroll de la página principal
-            document.body.classList.remove('no-scroll');
+            // Añadir el efecto blur al fondo de la intro y mostrar texto
+            document.getElementById('intro-bg').classList.add('blurred');
+            document.getElementById('intro-text-overlay').classList.add('show');
 
-            // Elimina el elemento del DOM después de la transición
+            // Esperar 6 segundos para que lean el texto y luego desaparecer todo
             setTimeout(() => {
-                this.style.display = 'none';
-            }, 1000);
+                this.classList.add('hidden');
+                
+                // Rehabilita el scroll de la página principal
+                document.body.classList.remove('no-scroll');
+
+                // Elimina el elemento del DOM después de la transición de opacidad
+                setTimeout(() => {
+                    this.style.display = 'none';
+                }, 1000);
+            }, 6000); 
         });
         // --- FIN INTRO ---
 
